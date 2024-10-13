@@ -1,15 +1,64 @@
+import {register} from '../api/api';
 import React, {useState} from 'react';
 import {fonts} from '../contants/fonts';
 import {colors} from '../contants/colors';
 import {screens} from '../contants/screens';
+import {ActivityIndicator} from 'react-native';
 import {Eye, EyeSlash} from 'iconsax-react-native';
 import {useNavigation} from '@react-navigation/native';
-import {View, Text, Image, TextInput, TouchableOpacity} from 'react-native';
+import {
+  View,
+  Text,
+  Image,
+  TextInput,
+  TouchableOpacity,
+  Alert,
+} from 'react-native';
 
 const Register = () => {
   const navigation = useNavigation();
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [error, setError] = useState(null);
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [rePassword, setRePassword] = useState('');
   const [securityPass, setSecurityPass] = useState(true);
   const [securityRePass, setSecurityRePass] = useState(true);
+
+  const handleRegister = async () => {
+    if (name === '' || email === '') {
+      setError('Please fill all the fields');
+      return;
+    }
+
+    if (password !== rePassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const body = {
+        name: name,
+        email: email,
+        password: password,
+      };
+      const res = await register(body);
+      if (res.status) {
+        Alert.alert('Success', 'User Registered Successfully', [
+          {
+            text: 'OK',
+            onPress: () => navigation.navigate(screens.Login),
+          },
+        ]);
+      }
+    } catch (error) {
+      setError('Invalid Credentials');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <View
@@ -49,6 +98,8 @@ const Register = () => {
 
       <View style={{width: '100%', alignItems: 'center', gap: 16}}>
         <TextInput
+          value={name}
+          onChangeText={setName}
           placeholder="Name"
           style={{
             padding: 10,
@@ -62,6 +113,9 @@ const Register = () => {
           placeholderTextColor={colors.gray}
         />
         <TextInput
+          keyboardType="email-address"
+          value={email}
+          onChangeText={setEmail}
           placeholder="Email"
           style={{
             padding: 10,
@@ -85,6 +139,8 @@ const Register = () => {
             borderColor: colors.gray2,
           }}>
           <TextInput
+            value={password}
+            onChangeText={setPassword}
             placeholder="Password"
             style={{
               padding: 10,
@@ -117,6 +173,8 @@ const Register = () => {
             borderColor: colors.gray2,
           }}>
           <TextInput
+            value={rePassword}
+            onChangeText={setRePassword}
             placeholder="Re-type Password"
             style={{
               padding: 10,
@@ -138,17 +196,35 @@ const Register = () => {
             )}
           </TouchableOpacity>
         </View>
+
+        {error && (
+          <Text
+            style={{
+              width: '90%',
+              color: 'red',
+              fontSize: 12,
+              fontWeight: 600,
+              fontFamily: fonts.Main,
+            }}>
+            {error}
+          </Text>
+        )}
       </View>
 
       <View style={{width: '100%', alignItems: 'center', gap: 10}}>
         <TouchableOpacity
+          onPress={handleRegister}
           style={{
+            flexDirection: 'row',
+            justifyContent: 'center',
+            gap: 10,
             padding: 15,
             width: '90%',
             borderRadius: 20,
             alignItems: 'center',
             backgroundColor: colors.orange,
           }}>
+          {loading ? <ActivityIndicator size="small" color="white" /> : null}
           <Text
             style={{
               color: 'white',

@@ -1,14 +1,45 @@
+import {login} from '../api/api';
 import React, {useState} from 'react';
 import {fonts} from '../contants/fonts';
 import {colors} from '../contants/colors';
 import {screens} from '../contants/screens';
 import {Eye, EyeSlash} from 'iconsax-react-native';
 import {useNavigation} from '@react-navigation/native';
-import {View, Text, Image, TextInput, TouchableOpacity} from 'react-native';
+import {
+  View,
+  Text,
+  Image,
+  TextInput,
+  TouchableOpacity,
+  ActivityIndicator,
+} from 'react-native';
 
 const Login = () => {
   const navigation = useNavigation();
+  const [email, setEmail] = useState('');
+  const [error, setError] = useState(null);
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
   const [security, setSecurity] = useState(true);
+
+  const handleLogin = async () => {
+    if (email === '' || password === '') {
+      setError('Please fill all the fields');
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await login({email, password});
+      if (res.status) {
+        navigation.navigate(screens.AuthNavigation);
+      }
+    } catch (error) {
+      console.log("🚀 ~ handleLogin ~ error:", error)
+      setError('Invalid Credentials');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <View
@@ -45,8 +76,13 @@ const Login = () => {
           </Text>
         </View>
       </View>
+
       <View style={{width: '100%', alignItems: 'center', gap: 16}}>
         <TextInput
+          value={email}
+          autoCapitalize='none'
+          onChangeText={setEmail}
+          keyboardType="email-address"
           placeholder="Email Address"
           style={{
             padding: 10,
@@ -59,19 +95,6 @@ const Login = () => {
           }}
           placeholderTextColor={colors.gray}
         />
-        {/* <TextInput
-          placeholder="Password"
-          style={{
-            padding: 10,
-            width: '90%',
-            color: 'white',
-            borderWidth: 1,
-            borderRadius: 8,
-            fontFamily: fonts.Main,
-            borderColor: colors.gray2,
-          }}
-          placeholderTextColor={colors.gray}
-        /> */}
 
         <View
           style={{
@@ -83,6 +106,8 @@ const Login = () => {
             borderColor: colors.gray2,
           }}>
           <TextInput
+            value={password}
+            onChangeText={setPassword}
             placeholder="Password"
             style={{
               padding: 10,
@@ -100,17 +125,35 @@ const Login = () => {
             {security ? <EyeSlash color="white" /> : <Eye color="white" />}
           </TouchableOpacity>
         </View>
+
+        {error && (
+          <Text
+            style={{
+              width: '90%',
+              color: 'red',
+              fontSize: 12,
+              fontWeight: 600,
+              fontFamily: fonts.Main,
+            }}>
+            {error}
+          </Text>
+        )}
       </View>
 
       <View style={{width: '100%', alignItems: 'center', gap: 10}}>
         <TouchableOpacity
+          onPress={handleLogin}
           style={{
+            gap: 10,
             padding: 15,
             width: '90%',
             borderRadius: 20,
+            flexDirection: 'row',
             alignItems: 'center',
+            justifyContent: 'center',
             backgroundColor: colors.orange,
           }}>
+          {loading ? <ActivityIndicator color="white" /> : null}
           <Text
             style={{
               color: 'white',
